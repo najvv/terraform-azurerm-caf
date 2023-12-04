@@ -78,3 +78,18 @@ module "packer_build" {
     azurerm_role_assignment.for,
   ]
 }
+
+module "gallery_application" {
+  source          = "./modules/shared_image_gallery/gallery_application"
+  for_each        = try(local.shared_services.gallery_application, {})
+
+  resource_group  = local.combined_objects_resource_groups[try(each.value.resource_group.lz_key, local.client_config.landingzone_key)][try(each.value.resource_group.key, each.value.resource_group_key)]
+  base_tags       = local.global_settings.inherit_tags
+  client_config   = local.client_config
+  global_settings = local.global_settings
+  gallery_name    = module.shared_image_galleries[each.value.shared_image_gallery_destination.gallery_key].name
+  settings        = each.value
+  depends_on = [
+    module.shared_image_galleries
+  ]
+}
